@@ -15,7 +15,20 @@ $classes = Join-Path $build 'classes'
 $dex = Join-Path $build 'dex'
 
 New-Item -ItemType Directory -Force -Path $classes, $dex | Out-Null
-if (!(Test-Path $androidJar) -or !(Test-Path $xposedApi)) { throw 'Missing Android SDK 35 or Xposed API 82 JAR' }
+if (!(Test-Path $androidJar)) { throw 'Missing Android SDK Platform 35' }
+
+# The Xposed API is only a compile-time dependency and must not be bundled.
+# Pin the digest to detect unexpected mirror changes.
+$expectedXposedSha256 = 'F48C635F1C7469FDEC0E00AD2EA0B7A6B2F5B55065784A35B7CA3A84615E8E25'
+if (!(Test-Path $xposedApi)) {
+    New-Item -ItemType Directory -Force -Path (Split-Path $xposedApi) | Out-Null
+    $source = 'https://maven.aliyun.com/repository/public/de/robv/android/xposed/api/82/api-82.jar'
+    Write-Output 'Downloading compile-only Xposed API 82 from Maven mirror...'
+    Invoke-WebRequest -Uri $source -OutFile $xposedApi -UseBasicParsing
+    if (!(Test-Path $xposedApi)) { throw 'Xposed API download failed' }
+}
+$actualXposedSha256 = (Get-FileHash $xposedApi -Algorithm SHA256).Hash
+if ($actualXposedSha256 -ne $expectedXposedSha256) { throw 'Xposed API hash verification failed' }
 
 $javac = (Get-Command javac.exe -ErrorAction Stop).Source
 $jar = (Get-Command jar.exe -ErrorAction Stop).Source

@@ -13,7 +13,7 @@ ChatGPT Android 部分版本的回复正文文字选择菜单不再显示第三�
 | **ChatGPT Quote Helper** | 接收选中文字，插入当前对话输入框 | 无障碍服务 |
 | **ChatGPT Text Selection Fix** | 在 ChatGPT 回复文字选择工具栏中显示 **Quote to GPT**，隐藏原生 **Ask ChatGPT**，直接启动 Quote Helper | 已配置的 LSPosed 环境 |
 
-**配套模块下载：** [`lsposed-selection-fix/releases/ChatGPT-Text-Selection-Fix-v0.1.0-debug.apk`](lsposed-selection-fix/releases/ChatGPT-Text-Selection-Fix-v0.1.0-debug.apk)
+**配套模块最新实验版：** [Text Selection Fix v0.2.0（GitHub Release 下载 APK）](https://github.com/V0idream/ChatGPTQuoteHelper/releases/tag/selection-fix-v0.2.0)。此前存放在仓库中的[早期调试包](lsposed-selection-fix/releases/ChatGPT-Text-Selection-Fix-v0.1.0-debug.apk)文件名带 `v0.1.0`，但 APK 内的 `versionName` 实际为 `0.2.0`；为避免混淆，建议使用 Release 附件。
 
 **模块源码与构建说明：** [`lsposed-selection-fix/`](lsposed-selection-fix/)
 
@@ -21,7 +21,7 @@ ChatGPT Android 部分版本的回复正文文字选择菜单不再显示第三�
 
 模块已在 Android 16 / ColorOS 16、ChatGPT `1.2026.279` 上进行初步手动测试：菜单入口能够出现，引用工具可调用。该模块使用显式组件名调用 `com.codex.chatgptquotehelper.debug/com.codex.chatgptquotehelper.ProcessTextActivity`，目前仅兼容这一包名的引用工具版本；不适用于所有第三方文字处理应用。**模块属于实验版本**，不同 ChatGPT 版本可能失效。
 
-两款 APK 都是 Debug 签名版本。LSPosed 模块的完整 Java 源码已提供；下文所述“原始源码已遗失”仅针对旧版 ChatGPT Quote Helper。
+两款 APK 都是 Debug 签名版本。LSPosed 模块的完整 Java 源码已提供，已通过 SDK 独立构建和 Gradle `assembleDebug` 编译验证；下文所述“原始源码已遗失”仅针对旧版 ChatGPT Quote Helper。模块 v0.2.0 的 SHA-256 参见 [校验文件](lsposed-selection-fix/SHA256SUMS.txt)。
 
 ## 下载与安装
 
@@ -37,7 +37,7 @@ ChatGPT Android 部分版本的回复正文文字选择菜单不再显示第三�
 
 ## 源码状态
 
-**原始 Android Studio / Kotlin 源码已遗失。此仓库仅保存发行说明与现存 APK，不是可编译源码项目。**
+**原 ChatGPT Quote Helper 的 Android Studio / Kotlin 源码已遗失，只有现存 APK 与发行说明。** 新增的 [LSPosed 修复模块](lsposed-selection-fix/)提供完整源码和可编译项目，两者的源码状态应分别理解。
 
 本次未反编译 APK，也没有将重建代码冒充原始源码。将来如有重建项目，会明确标注其来源与验证状态。
 

@@ -1,39 +1,70 @@
 # ChatGPT Text Selection Fix
 
-Experimental, ChatGPT-only LSPosed module for Android's `PROCESS_TEXT` menu.
+Experimental LSPosed compatibility module for the official ChatGPT Android application (`com.openai.chatgpt`). It restores a direct **Quote to GPT** text-selection action for use with the separate [ChatGPT Quote Helper](https://github.com/V0idream/ChatGPTQuoteHelper).
 
-## Installation / scope
+## What it does
 
-1. Install `app/build/standalone/chatgpt-selection-fix-debug.apk` (already built and signed), or the equivalent Gradle Debug APK from `app/build/outputs/apk/debug/app-debug.apk`. Normal ADB app installation is sufficient; **no ADB root**.
-2. In the LSPosed user interface, enable the module and set its scope to **ChatGPT** (`com.openai.chatgpt`) only.
-3. Force-stop/restart ChatGPT *through the normal Android UI*, then select a portion of an assistant response.
-4. Look for `Quote to GPT` directly on the floating selection toolbar, or inside overflow (`⋮`) if Android cannot fit it. The module also hides the `Ask ChatGPT` action from this toolbar to make room.
-5. Tap it to launch the installed quote helper directly (`com.codex.chatgptquotehelper.debug/com.codex.chatgptquotehelper.ProcessTextActivity`) with the selected text.
+When a user selects part of an assistant reply, the module attempts to:
 
-The module works only if ChatGPT starts a standard Android `ActionMode`. On the tested ChatGPT build, this hook successfully restored an overflow action; the new release requests first-level placement and direct helper invocation. Android may still move it into overflow depending on available space.
+1. Hook the standard Android `View.startActionMode(...)` selection callbacks inside ChatGPT.
+2. Hide the built-in **Ask ChatGPT** action, if it is present in the intercepted menu.
+3. Insert **Quote to GPT**, requesting placement in the first-level floating toolbar.
+4. On tap, extract only the current selection and pass it through `ACTION_PROCESS_TEXT` to `com.codex.chatgptquotehelper.debug/com.codex.chatgptquotehelper.ProcessTextActivity`.
 
-## Privacy and compatibility
+The Android floating toolbar can still move the action into overflow (`...`) if there is insufficient space. The module does not change other selection actions, such as Copy and Select all.
 
-The module does not request network, storage, accessibility or root permissions. It does not modify ChatGPT's APK or private files. It intercepts a synthetic, synchronous Copy action only when the user explicitly taps `Quote to GPT`, so that it can forward the selected text to the preinstalled quote helper without intentionally changing the system clipboard. No selected text is logged.
+The code first tries to read selection ranges from `TextView` / view accessibility metadata. If those are unavailable, it attempts to capture the result of the app's existing Copy action synchronously, without intentionally modifying the system clipboard. This fallback is experimental and may depend on the ChatGPT renderer.
 
-If selecting `Quote to GPT` does not launch the helper, collect only module diagnostic messages from LSPosed logs. Do not provide a full logcat dump containing private content.
+## Requirements
 
-This is an experimental first build; it has not been validated on all ChatGPT text renderers. Disable its LSPosed scope to revert to the app's original behavior.
+- Android 12L+ (API 32+) and an LSPosed-compatible rooted environment.
+- Official ChatGPT Android application (`com.openai.chatgpt`).
+- **ChatGPT Quote Helper 1.0.1-debug**, installed separately (or a compatible build retaining the same package name and Activity component).
 
-## Build
+Tested initially with ChatGPT Android **1.2026.279** on OnePlus 13 / Android 16 / ColorOS 16. Other versions have not been comprehensively tested.
 
-Requires JDK 17+, Android SDK Platform 35 and Android Gradle Plugin 8.7.3.
+## Install
 
-The bridge dependency is `de.robv.android.xposed:api:82`, used at compile time only. The Gradle build retrieves it from the configured Maven repositories; the standalone build expects `research/xposed-api-82.jar` (download this dependency separately). It must **not** be bundled into the APK.
+1. Install the APK attached to [Text Selection Fix v0.2.0](https://github.com/V0idream/ChatGPTQuoteHelper/releases/tag/selection-fix-v0.2.0).
+2. In LSPosed, enable this module with **only ChatGPT** (`com.openai.chatgpt`) in its scope.
+3. Force-stop and restart ChatGPT.
+4. Select text in an assistant response and tap **Quote to GPT**.
 
-Run `gradle :app:assembleDebug` from the project root.
+Do **not** grant ADB Shell superuser access. APK installation through ordinary `adb install` does not require `su` or `adb root`. LSPosed must already be installed and managed separately.
 
-If Gradle cannot download plugins, an independent Windows SDK build is also
-available: `powershell -ExecutionPolicy Bypass -File tools/build-standalone.ps1`.
-Its output is `app/build/standalone/chatgpt-selection-fix-debug.apk`.
+To undo the change, disable this module for ChatGPT and restart the ChatGPT app. Neither component sends messages automatically.
 
-## Distribution
+## Build from source
 
-The tested debug APK is archived at [`releases/ChatGPT-Text-Selection-Fix-v0.1.0-debug.apk`](releases/ChatGPT-Text-Selection-Fix-v0.1.0-debug.apk).
+Requires JDK 17+, Android SDK Platform 35, Android SDK Build Tools 35.0.0, and (for the Gradle route) Gradle 8.13 or a compatible Gradle version.
 
-The module is a companion to [ChatGPT Quote Helper](../README.md); it does not contain or replace the helper app. It targets the exact helper package and activity shown above.
+With a configured Android SDK, run:
+
+```powershell
+gradle :app:assembleDebug
+```
+
+Alternatively, on Windows, build without Android Gradle Plugin:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/build-standalone.ps1
+```
+
+The standalone script downloads the **compile-only** Xposed API 82 JAR from an Aliyun Maven mirror if absent and checks its SHA-256. Android, D8, and signing tools come from the installed SDK. `research/` and the local debug signing key are excluded from version control.
+
+Build outputs:
+
+- Gradle: `app/build/outputs/apk/debug/app-debug.apk`
+- Standalone: `app/build/standalone/chatgpt-selection-fix-debug.apk`
+
+Locally generated debug APKs normally use a **different signing certificate** from the published APK. To upgrade an existing installation without uninstalling it, use a build signed by the same key as the installed module.
+
+## Privacy and limitations
+
+- No Internet, Accessibility Service, or storage permissions are requested by this module.
+- No chat contents or selected text are written to logs. Only generic events and selected-text length may be logged for diagnostics.
+- No ChatGPT APK modification, authentication hooks, network interception, or automated sending.
+- A custom selection renderer that never starts Android `ActionMode` may bypass these hooks.
+- This build is experimental; user testing has shown the new menu action, but full cross-device regression testing has not been performed.
+
+For the original Quote Helper APK archive, see the [repository root README](../README.md). The helper's original Kotlin source code is not included because it has been lost.

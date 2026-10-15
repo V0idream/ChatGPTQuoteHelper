@@ -5,6 +5,7 @@ plugins {
 android {
     namespace 'dev.voidream.chatgptselectionfix'
     compileSdk 35
+    buildToolsVersion '35.0.0'
 
     defaultConfig {
         applicationId 'dev.voidream.chatgptselectionfix'
@@ -27,6 +28,6 @@ android {
 }
 
 dependencies {
-    // Compile-time only. The Xposed bridge is provided by LSPosed at runtime.
+    // Compile-time only. LSPosed provides the Xposed bridge at runtime.
     compileOnly 'de.robv.android.xposed:api:82'
 }
