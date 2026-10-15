@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:allowBackup="false"
+        android:hasCode="true"
+        android:label="@string/app_name"
+        android:description="@string/module_description">
+        <meta-data android:name="xposedmodule" android:value="true" />
+        <meta-data android:name="xposeddescription" android:value="Restore ChatGPT PROCESS_TEXT action" />
+        <meta-data android:name="xposedminversion" android:value="82" />
+    </application>
+</manifest>

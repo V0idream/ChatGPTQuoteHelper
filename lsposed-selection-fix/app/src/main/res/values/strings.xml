@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ChatGPT Text Selection Fix</string>
+    <string name="module_description">Restores process-text access in ChatGPT selection toolbar.</string>
+</resources>

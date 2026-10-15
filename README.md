@@ -2,6 +2,27 @@
 
 将 Android 文本选择菜单中选中的 ChatGPT 回复文字插入当前对话输入框的辅助工具。
 
+## 配套项目：ChatGPT Text Selection Fix（LSPosed）
+
+ChatGPT Android 部分版本的回复正文文字选择菜单不再显示第三方 `PROCESS_TEXT` 入口，导致本工具无法直接从回复中调用。为此，本仓库同时提供一个独立的 LSPosed 兼容模块。
+
+两个组件分工如下：
+
+| 组件 | 功能 | 依赖 |
+| --- | --- | --- |
+| **ChatGPT Quote Helper** | 接收选中文字，插入当前对话输入框 | 无障碍服务 |
+| **ChatGPT Text Selection Fix** | 在 ChatGPT 回复文字选择工具栏中显示 **Quote to GPT**，隐藏原生 **Ask ChatGPT**，直接启动 Quote Helper | 已配置的 LSPosed 环境 |
+
+**配套模块下载：** [`lsposed-selection-fix/releases/ChatGPT-Text-Selection-Fix-v0.1.0-debug.apk`](lsposed-selection-fix/releases/ChatGPT-Text-Selection-Fix-v0.1.0-debug.apk)
+
+**模块源码与构建说明：** [`lsposed-selection-fix/`](lsposed-selection-fix/)
+
+安装顺序：先安装并配置 ChatGPT Quote Helper，再安装 LSPosed 模块，在 LSPosed 中启用模块且仅勾选 `com.openai.chatgpt` 作为作用域，最后强制停止并重新打开 ChatGPT。选中模型回复文字后点击 **Quote to GPT**。系统仍可能在工具栏宽度不足时将其收进溢出菜单。
+
+模块已在 Android 16 / ColorOS 16、ChatGPT `1.2026.279` 上进行初步手动测试：菜单入口能够出现，引用工具可调用。该模块使用显式组件名调用 `com.codex.chatgptquotehelper.debug/com.codex.chatgptquotehelper.ProcessTextActivity`，目前仅兼容这一包名的引用工具版本；不适用于所有第三方文字处理应用。**模块属于实验版本**，不同 ChatGPT 版本可能失效。
+
+两款 APK 都是 Debug 签名版本。LSPosed 模块的完整 Java 源码已提供；下文所述“原始源码已遗失”仅针对旧版 ChatGPT Quote Helper。
+
 ## 下载与安装
 
 从 [Releases](https://github.com/V0idream/ChatGPTQuoteHelper/releases/tag/v1.0.1) 下载 `ChatGPTQuoteHelper-v1.0.1-debug.apk`。
