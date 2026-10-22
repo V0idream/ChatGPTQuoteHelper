@@ -49,7 +49,7 @@ if ($LASTEXITCODE -ne 0) { throw 'aapt2 compile failed' }
 $sourceManifest = Join-Path $root 'app\src\main\AndroidManifest.xml'
 $standaloneManifest = Join-Path $build 'AndroidManifest.xml'
 $manifestContent = [System.IO.File]::ReadAllText($sourceManifest)
-$manifestContent = $manifestContent.Replace('<manifest xmlns:android=', '<manifest package="dev.voidream.chatgptselectionfix" android:versionCode="2" android:versionName="0.2.0" xmlns:android=')
+$manifestContent = $manifestContent.Replace('<manifest xmlns:android=', '<manifest package="dev.voidream.chatgptselectionfix" android:versionCode="3" android:versionName="0.2.1" xmlns:android=')
 [System.IO.File]::WriteAllText($standaloneManifest, $manifestContent, (New-Object System.Text.UTF8Encoding $false))
 
 $unsigned = Join-Path $build 'unsigned.apk'

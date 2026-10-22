@@ -15,17 +15,23 @@ The Android floating toolbar can still move the action into overflow (`...`) if 
 
 The code first tries to read selection ranges from `TextView` / view accessibility metadata. If those are unavailable, it attempts to capture the result of the app's existing Copy action synchronously, without intentionally modifying the system clipboard. This fallback is experimental and may depend on the ChatGPT renderer.
 
+### Fix in v0.2.1: Return to ChatGPT automatically
+
+Earlier builds could start the text processor with `FLAG_ACTIVITY_NEW_TASK` if a floating toolbar's view held a wrapped `Context` rather than a direct Android `Activity`. Android could then resume an existing Quote Helper task, leaving its main page visible even after the temporary text processor called `finish()`.
+
+v0.2.1 unwraps `ContextWrapper` chains to locate the originating ChatGPT `Activity`, falling back to a weak reference to the most recently resumed ChatGPT `Activity` when necessary. It starts `ProcessTextActivity` from that `Activity` **without** `NEW_TASK`, preserving the expected return to ChatGPT. If no viable ChatGPT activity can be found, it skips the unsafe launch. This behavior was confirmed on the user's device.
+
 ## Requirements
 
 - Android 12L+ (API 32+) and an LSPosed-compatible rooted environment.
 - Official ChatGPT Android application (`com.openai.chatgpt`).
 - **ChatGPT Quote Helper 1.0.1-debug**, installed separately (or a compatible build retaining the same package name and Activity component).
 
-Tested initially with ChatGPT Android **1.2026.279** on OnePlus 13 / Android 16 / ColorOS 16. Other versions have not been comprehensively tested.
+Tested with ChatGPT Android **1.2026.279** on OnePlus 13 / Android 16 / ColorOS 16, including the v0.2.1 return-to-chat behavior. Other versions have not been comprehensively tested.
 
 ## Install
 
-1. Install the APK attached to [Text Selection Fix v0.2.0](https://github.com/V0idream/ChatGPTQuoteHelper/releases/tag/selection-fix-v0.2.0).
+1. Install the APK attached to [Text Selection Fix v0.2.1](https://github.com/V0idream/ChatGPTQuoteHelper/releases/tag/selection-fix-v0.2.1).
 2. In LSPosed, enable this module with **only ChatGPT** (`com.openai.chatgpt`) in its scope.
 3. Force-stop and restart ChatGPT.
 4. Select text in an assistant response and tap **Quote to GPT**.
@@ -65,6 +71,6 @@ Locally generated debug APKs normally use a **different signing certificate** fr
 - No chat contents or selected text are written to logs. Only generic events and selected-text length may be logged for diagnostics.
 - No ChatGPT APK modification, authentication hooks, network interception, or automated sending.
 - A custom selection renderer that never starts Android `ActionMode` may bypass these hooks.
-- This build is experimental; user testing has shown the new menu action, but full cross-device regression testing has not been performed.
+- This build is experimental; the user has confirmed normal quoting and automatic return to ChatGPT on their device, but full cross-device regression testing has not been performed.
 
 For the original Quote Helper APK archive, see the [repository root README](../README.md). The helper's original Kotlin source code is not included because it has been lost.

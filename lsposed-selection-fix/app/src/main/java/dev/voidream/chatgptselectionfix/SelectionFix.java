@@ -4,7 +4,9 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
+import android.app.Activity;
 import android.graphics.Rect;
 import android.text.Selection;
 import android.view.ActionMode;
@@ -34,6 +36,7 @@ public final class SelectionFix implements IXposedHookLoadPackage {
     private static final String HELPER_PACKAGE = "com.codex.chatgptquotehelper.debug";
     private static final String HELPER_ACTIVITY = "com.codex.chatgptquotehelper.ProcessTextActivity";
     private static final ThreadLocal<Capture> ACTIVE_CAPTURE = new ThreadLocal<>();
+    private static volatile WeakReference<Activity> lastResumedActivity = new WeakReference<>(null);
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam param) {
@@ -41,8 +44,47 @@ public final class SelectionFix implements IXposedHookLoadPackage {
 
         hookSelectionToolbar(ActionMode.Callback.class, false);
         hookSelectionToolbar(ActionMode.Callback.class, true);
+        hookForegroundActivity();
         hookClipboardCapture();
         log("Loaded in ChatGPT process; waiting for ActionMode callbacks");
+    }
+
+    private static void hookForegroundActivity() {
+        try {
+            XposedHelpers.findAndHookMethod(Activity.class, "onResume", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    Activity activity = (Activity) param.thisObject;
+                    if (TARGET_PACKAGE.equals(activity.getPackageName())) {
+                        lastResumedActivity = new WeakReference<>(activity);
+                    }
+                }
+            });
+        } catch (Throwable e) {
+            log("Unable to track foreground Activity: " + e.getClass().getSimpleName());
+        }
+    }
+
+    private static Activity findCallerActivity(View view) {
+        Context context = view.getContext();
+        // Compose and floating toolbars may wrap their Activity in multiple
+        // ContextWrappers. The raw instanceof Activity check is insufficient.
+        for (int i = 0; i < 20 && context != null; i++) {
+            if (context instanceof Activity) {
+                Activity activity = (Activity) context;
+                if (!activity.isFinishing() && !activity.isDestroyed()) return activity;
+                break;
+            }
+            if (!(context instanceof ContextWrapper)) break;
+            Context next = ((ContextWrapper) context).getBaseContext();
+            if (next == context) break;
+            context = next;
+        }
+        // Views created with application context may not retain an Activity.
+        // Use the most recently resumed ChatGPT Activity as the caller instead.
+        Activity resumed = lastResumedActivity.get();
+        return resumed != null && !resumed.isFinishing() && !resumed.isDestroyed()
+                ? resumed : null;
     }
 
     private static void hookSelectionToolbar(Class<?> callbackType, boolean typed) {
@@ -163,16 +205,21 @@ public final class SelectionFix implements IXposedHookLoadPackage {
                     selection = captureUsingCopy(mode, view.getContext());
                 }
                 if (selection != null && selection.length() > 0) {
+                    Activity caller = findCallerActivity(view);
+                    if (caller == null) {
+                        // Never introduce NEW_TASK here: it can switch to an
+                        // already-running Quote Helper task and leave its
+                        // MainActivity visible after the receiver finishes.
+                        log("No usable ChatGPT Activity; skipping unsafe NEW_TASK launch");
+                        return true;
+                    }
                     Intent process = new Intent(Intent.ACTION_PROCESS_TEXT)
                             .setComponent(new ComponentName(HELPER_PACKAGE, HELPER_ACTIVITY))
                             .setType("text/plain")
                             .putExtra(Intent.EXTRA_PROCESS_TEXT, selection.toString())
                             .putExtra(Intent.EXTRA_PROCESS_TEXT_READONLY, true);
-                    if (!(view.getContext() instanceof android.app.Activity)) {
-                        process.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    }
-                    view.getContext().startActivity(process);
-                    log("Launched quote helper with selected text (length=" + selection.length() + ")");
+                    caller.startActivity(process);
+                    log("Launched quote helper in caller task; selected text length=" + selection.length());
                 } else {
                     log("Could not recover selected text; no action launched");
                 }

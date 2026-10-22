@@ -13,15 +13,15 @@ ChatGPT Android 部分版本的回复正文文字选择菜单不再显示第三�
 | **ChatGPT Quote Helper** | 接收选中文字，插入当前对话输入框 | 无障碍服务 |
 | **ChatGPT Text Selection Fix** | 在 ChatGPT 回复文字选择工具栏中显示 **Quote to GPT**，隐藏原生 **Ask ChatGPT**，直接启动 Quote Helper | 已配置的 LSPosed 环境 |
 
-**配套模块最新实验版：** [Text Selection Fix v0.2.0（GitHub Release 下载 APK）](https://github.com/V0idream/ChatGPTQuoteHelper/releases/tag/selection-fix-v0.2.0)。此前存放在仓库中的[早期调试包](lsposed-selection-fix/releases/ChatGPT-Text-Selection-Fix-v0.1.0-debug.apk)文件名带 `v0.1.0`，但 APK 内的 `versionName` 实际为 `0.2.0`；为避免混淆，建议使用 Release 附件。
+**配套模块最新版：** [Text Selection Fix v0.2.1（GitHub Release 下载 APK）](https://github.com/V0idream/ChatGPTQuoteHelper/releases/tag/selection-fix-v0.2.1)。[v0.2.0](https://github.com/V0idream/ChatGPTQuoteHelper/releases/tag/selection-fix-v0.2.0) 保留作为历史版本。此前存放在仓库中的[早期调试包](lsposed-selection-fix/releases/ChatGPT-Text-Selection-Fix-v0.1.0-debug.apk)文件名带 `v0.1.0`，但 APK 内的 `versionName` 实际为 `0.2.0`；为避免混淆，建议使用 Release 附件。
 
 **模块源码与构建说明：** [`lsposed-selection-fix/`](lsposed-selection-fix/)
 
 安装顺序：先安装并配置 ChatGPT Quote Helper，再安装 LSPosed 模块，在 LSPosed 中启用模块且仅勾选 `com.openai.chatgpt` 作为作用域，最后强制停止并重新打开 ChatGPT。选中模型回复文字后点击 **Quote to GPT**。系统仍可能在工具栏宽度不足时将其收进溢出菜单。
 
-模块已在 Android 16 / ColorOS 16、ChatGPT `1.2026.279` 上进行初步手动测试：菜单入口能够出现，引用工具可调用。该模块使用显式组件名调用 `com.codex.chatgptquotehelper.debug/com.codex.chatgptquotehelper.ProcessTextActivity`，目前仅兼容这一包名的引用工具版本；不适用于所有第三方文字处理应用。**模块属于实验版本**，不同 ChatGPT 版本可能失效。
+模块已在 Android 16 / ColorOS 16、ChatGPT `1.2026.279` 上进行手动测试：菜单入口能够出现，引用工具可调用。**v0.2.1 解决了引用后意外停留在 Quote Helper 主界面、需要手动返回 ChatGPT 的问题**，用户已确认修复后引用正常。原因是之前的启动逻辑可能错误地使用 `FLAG_ACTIVITY_NEW_TASK`，将处理页面启动到 Quote Helper 的已有任务栈中。新版从实际的 ChatGPT `Activity` 发起操作，不再设置该标志。模块使用显式组件名调用 `com.codex.chatgptquotehelper.debug/com.codex.chatgptquotehelper.ProcessTextActivity`，仅兼容这一包名的引用工具版本；不适用于所有第三方文字处理应用。**模块仍属于实验版本**，其他 ChatGPT 版本可能失效。
 
-两款 APK 都是 Debug 签名版本。LSPosed 模块的完整 Java 源码已提供，已通过 SDK 独立构建和 Gradle `assembleDebug` 编译验证；下文所述“原始源码已遗失”仅针对旧版 ChatGPT Quote Helper。模块 v0.2.0 的 SHA-256 参见 [校验文件](lsposed-selection-fix/SHA256SUMS.txt)。
+两款公开 APK 都是 Debug 签名版本。LSPosed 模块的完整 Java 源码已提供，可以通过 SDK 独立构建和 Gradle `assembleDebug` 编译；下文所述“原始源码已遗失”仅针对旧版 ChatGPT Quote Helper。模块各版本的 SHA-256 参见 [校验文件](lsposed-selection-fix/SHA256SUMS.txt)。
 
 ## 下载与安装
 
